@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link href="192.png" rel="icon" sizes="192x192" type="image/png">
+  <title>Step Count Analysis</title>
+  <meta name="description" content="Step Count Analysis from Samsung Health and Health Connect by Google.">
+  <link rel="canonical" href="https://santhoshkumar.github.io/steps-data/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Mozilla+Headline:wght@200..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #7B1FA2;
+      --primary-light: #E1BEE7;
+      --primary-dark: #4A148C;
+      --secondary-color: #FF4081;
+      --surface-color: #FFFFFF;
+      --background-color: #F5F5F5;
+      --error-color: #D32F2F;
+      --text-primary: #212121;
+      --text-secondary: #424242;
+      --divider-color: #BDBDBD;
+      --on-primary: #FFFFFF;
+      --on-secondary: #FFFFFF;
+      --on-error: #FFFFFF;
+    }
+
+    [data-theme="dark"] {
+      --primary-color: #9C27B0;
+      --primary-light: #4A148C;
+      --primary-dark: #E1BEE7;
+      --secondary-color: #FF80AB;
+      --surface-color: #1E1E1E;
+      --background-color: #121212;
+      --error-color: #CF6679;
+      --text-primary: #F5F5F5;
+      --text-secondary: #BDBDBD;
+      --divider-color: #424242;
+      --on-primary: #FFFFFF;
+      --on-secondary: #000000;
+      --on-error: #000000;
+    }
+
+    * {
+      box-sizing: border-box;
+      transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    }
+
+    body {
+      font-family: "Mozilla Headline", sans-serif;
+      background-color: var(--background-color);
+      margin: 0;
+      padding: 0;
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 1rem auto;
+      background-color: var(--surface-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .theme-switch-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      gap: 0.5rem;
+    }
+
+    .theme-switch {
+      display: inline-block;
+      height: 34px;
+      position: relative;
+      width: 60px;
+    }
+
+    .theme-switch input {
+      display: none;
+    }
+
+    .slider {
+      background-color: #8a61a5;
+      bottom: 0;
+      cursor: pointer;
+      left: 0;
+      position: absolute;
+      right: 0;
+      top: 0;
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      background-color: white;
+      bottom: 4px;
+      content: "";
+      height: 26px;
+      left: 4px;
+      position: absolute;
+      transition: .4s;
+      width: 26px;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary-color);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    .slider-icons {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 5px;
+      align-items: center;
+      height: 100%;
+    }
+
+    .slider-icons span {
+      font-size: 16px;
+      color: white;
+    }
+
+    .dashboard-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 2rem;
+      gap: 1.5rem;
+    }
+
+    .total-steps-card {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      color: var(--on-primary);
+      padding: 2rem;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      box-shadow: 0 8px 16px rgba(123, 31, 162, 0.3);
+      min-width: 250px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .total-steps-icon {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .total-steps-text {
+      font-family: "Mozilla Headline", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .total-steps-label {
+      font-family: "Mozilla Headline", sans-serif;
+      font-size: 1.1rem;
+      opacity: 0.9;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.5px;
+    }
+
+    .total-steps-value {
+      font-family: "Mozilla Headline", sans-serif;
+      font-size: 2.5rem;
+      font-weight: bold;
+    }
+
+    .stats-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background-color: var(--surface-color);
+      border-radius: 8px;
+      padding: 1.2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      min-width: 150px;
+      text-align: center;
+      flex: 1;
+      border-top: 4px solid var(--primary-color);
+    }
+
+    .stat-value {
+      font-family: "Mozilla Headline", sans-serif;
+      font-size: 1.6rem;
+      font-weight: bold;
+      color: var(--primary-color);
+      margin-bottom: 0.3rem;
+    }
+
+    .stat-label {
+      font-family: "Mozilla Headline", sans-serif;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .filters-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      align-items: center;
+      justify-content: center;
+      font-family: "Mozilla Headline", sans-serif;
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background-color: var(--primary-light);
+      border-radius: 8px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-width: 200px;
+    }
+
+    .filter-label {
+      font-family: "Mozilla Headline", sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+    }
+
+    .filter-input, .date-input {
+      padding: 0.85rem;
+      border: 1px solid var(--divider-color);
+      border-radius: 4px;
+      font-family: "Mozilla Headline", sans-serif;
+      font-size: 1rem;
+      width: 100%;
+      background-color: var(--surface-color);
+      color: var(--text-primary);
+      transition: all 0.3s ease;
+    }
+
+    .filter-input:focus, .date-input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(123, 31, 162, 0.2);
+    }
+
+    .date-range-container {
+      display: none; /* Hide date range container */
+    }
+
+    .date-to {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .button {
+      background-color: var(--primary-color);
+      color: var(--on-primary);
+      border: none;
+      padding: 0.85rem 1.5rem;
+      border-radius: 4px;
+      font-family: "Mozilla Headline", sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .button:hover {
+      background-color: var(--primary-dark);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .button:active {
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .chart-container {
+      position: relative;
+      height: 400px;
+      margin-top: 2rem;
+      background-color: var(--surface-color);
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      font-family: "Mozilla Headline", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .no-chart-message {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 1.2rem;
+    }
+
+    .error {
+      text-align: center;
+      color: var(--on-error);
+      background-color: var(--error-color);
+      margin-bottom: 1rem;
+      padding: 1rem;
+      border-radius: 4px;
+      border: 1px solid rgba(244, 67, 54, 0.2);
+      font-family: "Mozilla Headline", sans-serif;
+      font-weight: 500;
+    }
+
+    .data-info {
+      text-align: center;
+      margin-top: 1.2rem;
+      color: var(--text-secondary);
+      font-family: "Mozilla Headline", sans-serif;
+      font-size: 0.95rem;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 2.5rem;
+      color: var(--text-secondary);
+      padding: 1rem;
+      font-family: "Mozilla Headline", sans-serif;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+        margin: 0.5rem;
+      }
+      
+      .dashboard-header {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .stats-container {
+        flex-direction: column;
+      }
+      
+      .stat-card {
+        width: 100%;
+      }
+      
+      .chart-container {
+        height: 350px;
+      }
+      
+      .total-steps-value {
+        font-size: 2rem;
+      }
+      
+      .filters-container {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .date-range-container {
+        flex-direction: column;
+        gap: 0.8rem;
+      }
+      
+      .date-to {
+        display: none;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .chart-container {
+        height: 300px;
+      }
+      
+      .filter-group {
+        min-width: 100%;
+      }
+      
+      .header-controls {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 200px;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--divider-color);
+      border-top: 4px solid var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    input[type="date"] {
+      font-family: "Mozilla Headline", sans-serif;
+      position: relative;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      opacity: 1;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    input[type="date"] {
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="date"]::-webkit-inner-spin-button,
+      input[type="date"]::-webkit-calendar-picker-indicator {
+       display: none;
+       -webkit-appearance: none;
+    }
+  </style>
+
+</head>
+<body>
+  <div class="container">
+
+    <div id="error-message" class="error" style="display: none;"></div>
+    <div id="loading" class="loading">
+      <div class="loading-spinner"></div>
+    </div>
+
+    <div id="dashboard-content" style="display: none;">
+      <div class="dashboard-header">
+        <div class="total-steps-card">
+          <span class="material-icons total-steps-icon">fitness_center</span>
+          <div class="total-steps-text">
+            <div class="total-steps-label">TOTAL STEPS</div>
+            <div class="total-steps-value" id="total-steps">0</div>
+          </div>
+        </div>
+      </div>
+
+       <div class="header-controls">
+       <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="theme-checkbox">
+          <input type="checkbox" id="theme-checkbox" />
+          <div class="slider">
+            <div class="slider-icons">
+              <span class="material-icons">light_mode</span>
+              <span class="material-icons">dark_mode</span>
+            </div>
+          </div>
+        </label>
+        <span class="toggle-label"></span>
+        <span class="toggle-label"></span>
+        <label class="theme-switch">
+          <input type="checkbox" id="human-readable-toggle">
+          <div class="slider">
+            <div class="slider-icons">
+              <span class="material-icons">format_list_numbered</span>
+              <span class="material-icons">10k</span>
+            </div>
+          </div>
+        </label>
+      </div>
+    </div>
+      
+      <div class="stats-container">
+        <div class="stat-card">
+          <div class="stat-value" id="average-steps">0</div>
+          <div class="stat-label">Average Steps/Day</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="max-steps">0</div>
+          <div class="stat-label">Max Steps/Day</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="min-steps">0</div>
+          <div class="stat-label">Min Steps/Day</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="days-count">0</div>
+          <div class="stat-label">Days Recorded</div>
+        </div>
+      </div>
+      
+      <div class="filters-container">
+        <div class="filter-group" style="display: none;"> <!-- Hide date range filter -->
+          <div class="filter-label">Date Range</div>
+          <div class="date-range-container">
+            <input type="date" class="date-input" id="start-date">
+            <span class="date-to">to</span>
+            <input type="date" class="date-input" id="end-date">
+          </div>
+        </div>
+        
+        <div class="filter-group" style="margin: 0 auto;">
+          <div class="filter-label">Quick Select</div>
+          <select class="filter-input" id="quick-select">
+            <option value="1">Last 1 Days</option>
+            <option value="7">Last 7 Days</option>
+            <option value="14">Last 14 Days</option>
+            <option value="30">Last 30 Days</option>
+            <option value="90">Last 90 Days</option>
+            <option value="0">All Time</option>
+          </select>
+        </div>
+        
+        <div class="filter-group" style="display: none;">
+          <div class="filter-label">&nbsp;</div>
+          <button class="button" id="apply-dates">Apply Filter</button>
+        </div>
+      </div>
+      
+      <div class="data-info" id="data-range">
+        Showing data from - to -
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    &copy; 2025 Step Tracker | Data from Samsung Health
+  </footer>
+  
+  <script>
+    let allData = null;
+    let dailyData = null;
+    let useHumanReadable = false;
+    let darkMode = false;
+
+    function formatNumberSocialStyle(num) {
+      if (!useHumanReadable) return num.toLocaleString();
+      
+      if (num >= 1000000000) {
+        return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
+      }
+      if (num >= 1000000) {
+        return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+      }
+      if (num >= 1000) {
+        return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+      }
+      return num.toString();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+      loadPreferences();
+      
+      const today = new Date();
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(today.getDate() - 7);
+      
+      document.getElementById('start-date').valueAsDate = sevenDaysAgo;
+      document.getElementById('end-date').valueAsDate = today;
+      
+      document.getElementById('apply-dates').addEventListener('click', updateDashboardWithDates);
+      document.getElementById('quick-select').addEventListener('change', handleQuickSelect);
+      document.getElementById('theme-checkbox').addEventListener('change', toggleTheme);
+      document.getElementById('human-readable-toggle').addEventListener('change', toggleHumanReadable);
+      
+      init();
+    });
+
+    function loadPreferences() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('theme-checkbox').checked = true;
+        darkMode = true;
+      }
+      
+      const savedFormat = localStorage.getItem('humanReadable');
+      if (savedFormat === 'true') {
+        document.getElementById('human-readable-toggle').checked = true;
+        useHumanReadable = true;
+      }
+    }
+
+    function toggleTheme() {
+      darkMode = !darkMode;
+      if (darkMode) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'light');
+      }
+    }
+
+    function toggleHumanReadable() {
+      useHumanReadable = !useHumanReadable;
+      localStorage.setItem('humanReadable', useHumanReadable);
+      
+      if (dailyData) {
+        handleQuickSelect();
+      }
+    }
+
+    async function loadCSV() {
+      try {
+        showLoading(true);
+        const response = await fetch('data/steps.csv');
+        if (!response.ok) {
+          throw new Error('Failed to load step data');
+        }
+        const csvText = await response.text();
+        return parseCSV(csvText);
+      } catch (error) {
+        showError('Could not load step data. ' + error.message);
+        return null;
+      }
+    }
+
+    function parseCSV(text) {
+      try {
+        const lines = text.trim().split('\n');
+        
+        // Skip the first line if it's a BOM or empty
+        if (lines[0].charCodeAt(0) === 0xFEFF) {
+          lines[0] = lines[0].substring(1);
+        }
+        
+        if (lines.length <= 1) {
+          throw new Error('CSV file is empty or has no data');
+        }
+        
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        const dateIdx = headers.indexOf('date');
+        const stepsIdx = headers.indexOf('steps');
+        
+        if (dateIdx === -1 || stepsIdx === -1) {
+          throw new Error('CSV format invalid. Required columns: Date, Steps');
+        }
+
+        const data = [];
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue;
+          
+          const cols = line.split(',').map(c => c.trim());
+          if (cols.length < Math.max(dateIdx, stepsIdx) + 1) {
+            console.warn('Skipping invalid line:', line);
+            continue;
+          }
+          
+          const dateStr = cols[dateIdx];
+          const stepsStr = cols[stepsIdx];
+          
+          let date;
+          
+          // Parse the date in YYYY.MM.DD HH:mm:ss format (Asia/Kolkata)
+          if (dateStr.includes('.')) {
+            const dateTimeParts = dateStr.split(' ');
+            const dateParts = dateTimeParts[0].split('.');
+            const timeParts = dateTimeParts[1].split(':');
+            
+            const year = parseInt(dateParts[0]);
+            const month = parseInt(dateParts[1]) - 1; // Months are 0-indexed in JS
+            const day = parseInt(dateParts[2]);
+            const hours = parseInt(timeParts[0]);
+            const minutes = parseInt(timeParts[1]);
+            const seconds = parseInt(timeParts[2]);
+            
+            // Create date in Asia/Kolkata timezone (UTC+5:30)
+            date = new Date(Date.UTC(year, month, day, hours, minutes, seconds));
+            // Adjust for IST (UTC+5:30)
+            date.setUTCHours(date.getUTCHours() - 5);
+            date.setUTCMinutes(date.getUTCMinutes() - 30);
+          } else {
+            // Fallback for other date formats
+            date = new Date(dateStr);
+          }
+          
+          if (isNaN(date.getTime())) {
+            console.warn('Skipping invalid date:', dateStr);
+            continue;
+          }
+          
+          const steps = parseInt(stepsStr, 10);
+          if (isNaN(steps) || steps < 0) {
+            console.warn('Skipping invalid steps value:', stepsStr);
+            continue;
+          }
+          
+          data.push({ date, steps });
+        }
+        
+        if (data.length === 0) {
+          throw new Error('No valid data found in CSV');
+        }
+        
+        data.sort((a, b) => a.date - b.date);
+        
+        return data;
+      } catch (error) {
+        showError('Error parsing CSV: ' + error.message);
+        return null;
+      }
+    }
+
+    function processDailyData(data) {
+      const daily = {};
+      
+      data.forEach(entry => {
+        // Create a date key without time component to group by day
+        // Convert to Asia/Kolkata timezone (UTC+5:30)
+        const utcDate = new Date(entry.date);
+        const istDate = new Date(utcDate.getTime() + (5.5 * 60 * 60 * 1000));
+        const dateKey = istDate.toISOString().split('T')[0];
+        
+        if (!daily[dateKey]) {
+          daily[dateKey] = {
+            date: new Date(istDate.getFullYear(), istDate.getMonth(), istDate.getDate()),
+            steps: 0,
+            formattedDate: istDate.toLocaleDateString(undefined, { 
+              weekday: 'short',
+              year: 'numeric',
+              month: 'short', 
+              day: 'numeric',
+              timeZone: 'Asia/Kolkata'
+            })
+          };
+        }
+        
+        daily[dateKey].steps += entry.steps;
+      });
+      
+      return Object.values(daily).sort((a, b) => a.date - b.date);
+    }
+
+    function filterDataByDateRange(dailyData, startDate, endDate) {
+      if (!startDate || !endDate) return dailyData;
+      
+      return dailyData.filter(day => {
+        const dayDate = new Date(day.date);
+        return dayDate >= startDate && dayDate <= endDate;
+      });
+    }
+
+    function filterDataByDays(dailyData, days) {
+      if (!days || days <= 0 || days >= dailyData.length) return dailyData;
+      
+      const cutoffIndex = dailyData.length - days;
+      return dailyData.slice(cutoffIndex);
+    }
+
+    function calculateStats(dailyData) {
+      if (dailyData.length === 0) {
+        return {
+          total: 0,
+          average: 0,
+          max: 0,
+          min: 0,
+          days: 0
+        };
+      }
+      
+      const steps = dailyData.map(day => day.steps);
+      const total = steps.reduce((sum, val) => sum + val, 0);
+      const average = Math.round(total / dailyData.length);
+      const max = Math.max(...steps);
+      const min = Math.min(...steps);
+      
+      return {
+        total,
+        average,
+        max,
+        min,
+        days: dailyData.length
+      };
+    }
+
+    function showError(message) {
+      const errorEl = document.getElementById('error-message');
+      errorEl.textContent = message;
+      errorEl.style.display = 'block';
+      setTimeout(() => { 
+        errorEl.textContent = ''; 
+        errorEl.style.display = 'none';
+      }, 5000);
+      showLoading(false);
+    }
+
+    function showLoading(show) {
+      document.getElementById('loading').style.display = show ? 'flex' : 'none';
+      document.getElementById('dashboard-content').style.display = show ? 'none' : 'block';
+    }
+
+    function updateDashboardWithDates() {
+      if (!dailyData) return;
+      
+      const startDate = new Date(document.getElementById('start-date').value);
+      const endDate = new Date(document.getElementById('end-date').value);
+      
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        showError('Please select valid dates');
+        return;
+      }
+      
+      if (startDate > endDate) {
+        showError('Start date cannot be after end date');
+        return;
+      }
+      
+      const filteredData = filterDataByDateRange(dailyData, startDate, endDate);
+      updateDashboardWithData(filteredData);
+    }
+
+    function handleQuickSelect() {
+      if (!dailyData) return;
+      
+      const days = parseInt(document.getElementById('quick-select').value);
+      let filteredData;
+      
+      if (days === 0) {
+        filteredData = dailyData;
+      } else {
+        filteredData = filterDataByDays(dailyData, days);
+        
+        // Update the date inputs to reflect the selected range
+        if (filteredData.length > 0) {
+          const startDate = filteredData[0].date;
+          const endDate = filteredData[filteredData.length - 1].date;
+          
+          document.getElementById('start-date').valueAsDate = startDate;
+          document.getElementById('end-date').valueAsDate = endDate;
+        }
+      }
+      
+      updateDashboardWithData(filteredData);
+    }
+
+    function updateDashboardWithData(filteredData) {
+      const stats = calculateStats(filteredData);
+      
+      document.getElementById('total-steps').textContent = formatNumberSocialStyle(stats.total);
+      document.getElementById('average-steps').textContent = formatNumberSocialStyle(stats.average);
+      document.getElementById('max-steps').textContent = formatNumberSocialStyle(stats.max);
+      document.getElementById('min-steps').textContent = formatNumberSocialStyle(stats.min);
+      document.getElementById('days-count').textContent = stats.days.toLocaleString();
+      
+      if (filteredData.length > 0) {
+        const firstDate = filteredData[0].formattedDate;
+        const lastDate = filteredData[filteredData.length - 1].formattedDate;
+        document.getElementById('data-range').textContent = `Showing data from ${firstDate} to ${lastDate}`;
+      } else {
+        document.getElementById('data-range').textContent = 'No data available for selected date range';
+      }
+    }
+
+    async function init() {
+      const data = await loadCSV();
+      if (!data) return;
+      
+      dailyData = processDailyData(data);
+      
+      // Set default to last 7 days
+      document.getElementById('quick-select').value = "7";
+      handleQuickSelect();
+      
+      showLoading(false);
+    }
+  </script>
+
+</body>
+</html>
