@@ -1,8 +1,8 @@
-# Step Count Analysis 📊
+# Live Step Count Analysis 📊
 
 [![Deploy static content to Pages](https://github.com/santhoshkumar/steps-data/actions/workflows/static.yml/badge.svg)](https://github.com/santhoshkumar/steps-data/actions/workflows/static.yml)  
 
-Step Count Analysis from Zepp and Health Connect by Google.  
+Live Step Count Analysis from Zepp and Health Connect by Google.  
 
 ***
 
@@ -20,8 +20,7 @@ Step Count Analysis from Zepp and Health Connect by Google.
 
 ## Live Site 🌐
 
-- Total Steps: <https://santhoshkumar.github.io/steps-data/>
-- Live Steps: <https://santhoshkumar.github.io/steps-data/live>  
+- Live Steps: <https://santhoshkumar.github.io/steps-data/>
 
 ## LICENSE ✅
 
